@@ -7,11 +7,11 @@
         <style>
             :root {
                 --primary-color: #00eaff;
-                --background-blur: rgba(0, 0, 0, 0.5);
+                --background-blur: rgba(0, 0, 0, 0.7);
                 --border-radius: 10px;
             }
             body {
-                <body style="background: url('/public/images/CCCC.png') no-repeat center center fixed; background-size: cover;">
+                background: linear-gradient(to right, #141414, #1f1f1f);
                 background-size: cover;
                 color: white;
                 font-family: Arial, sans-serif;
@@ -19,12 +19,20 @@
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+                height: 100vh;
+                margin: 0;
+            }
+            h1 {
+                font-size: 2.5rem;
+                margin: 20px 0;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
             }
             .container {
                 display: flex;
                 justify-content: space-between;
                 width: 90%;
                 max-width: 1200px;
+                margin-top: 20px;
             }
             .glass {
                 background: rgba(255, 255, 255, 0.1);
@@ -42,8 +50,7 @@
                 border-collapse: collapse;
                 background: rgba(0, 0, 0, 0.5);
             }
-            th,
-            td {
+            th, td {
                 padding: 10px;
                 border: 1px solid var(--primary-color);
                 color: white;
