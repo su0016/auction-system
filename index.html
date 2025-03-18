@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh-TW">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>競標系統</title>
+        <style>
+            :root {
+                --primary-color: #00eaff;
+                --background-blur: rgba(0, 0, 0, 0.5);
+                --border-radius: 10px;
+            }
+            body {
+                <body style="background: url('/public/images/CCCC.png') no-repeat center center fixed; background-size: cover;">
+                background-size: cover;
+                color: white;
+                font-family: Arial, sans-serif;
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .container {
+                display: flex;
+                justify-content: space-between;
+                width: 90%;
+                max-width: 1200px;
+            }
+            .glass {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                padding: 20px;
+                border-radius: var(--border-radius);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                box-shadow: 0 0 10px var(--primary-color);
+                flex: 1;
+                margin: 10px;
+                min-width: 300px;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                background: rgba(0, 0, 0, 0.5);
+            }
+            th,
+            td {
+                padding: 10px;
+                border: 1px solid var(--primary-color);
+                color: white;
+            }
+            th {
+                background: var(--primary-color);
+                color: black;
+            }
+            input,
+            select,
+            button {
+                padding: 10px;
+                margin: 5px;
+                border-radius: var(--border-radius);
+                border: none;
+            }
+            button {
+                background: var(--primary-color);
+                color: black;
+                cursor: pointer;
+                transition: 0.3s;
+            }
+            button:hover {
+                background: white;
+                color: var(--primary-color);
+            }
+        </style>
+    </head>
+    <body>
+        <h1>聖戰天堂-清牛堂即時競標系統</h1>
+        <div class="container">
+            <div class="glass">
+                <h2>玩家競標</h2>
+                <input type="text" id="playerName" placeholder="輸入你的名稱" />
+                <select id="itemSelect"></select>
+                <input
+                    type="number"
+                    id="bidAmount"
+                    placeholder="輸入競標金額"
+                />
+                <button onclick="sendBid()">出價</button>
+            </div>
+            <div class="glass">
+                <h2>目前競標項目</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>道具持有人</th>
+                            <th>物品名稱</th>
+                            <th>最高出價</th>
+                            <th>最高出價者</th>
+                            <th>狀態</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auctionTable"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="glass" style="margin-top: 20px; width: 60%">
+            <h2>管理員刊登競標</h2>
+            <input type="text" id="adminUser" placeholder="管理員帳號" />
+            <input type="password" id="adminPass" placeholder="管理員密碼" />
+            <input type="text" id="itemOwner" placeholder="道具持有人" />
+            <input type="text" id="newItemName" placeholder="競標物品名稱" />
+            <input
+                type="number"
+                id="startingPrice"
+                placeholder="起始競標價格"
+            />
+            <button onclick="addItem()">刊登競標</button>
+        </div>
+        <script>
+            const ws = new WebSocket(
+                (location.protocol === "https:" ? "wss://" : "ws://") +
+                    location.host,
+            );
+            ws.onopen = () => console.log("✅ WebSocket 連線成功！");
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === "error") {
+                    alert(data.message);
+                    return;
+                }
+                updateAuctionTable(data);
+                updateItemSelect(data);
+            };
+            function updateAuctionTable(data) {
+                const tableBody = document.getElementById("auctionTable");
+                tableBody.innerHTML = "";
+                Object.keys(data).forEach((item) => {
+                    let row = `<tr>
+                        <td>${data[item].owner}</td>
+                        <td>${item}</td>
+                        <td>${data[item].amount}</td>
+                        <td>${data[item].user}</td>
+                        <td>${data[item].status}</td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                });
+            }
+            function updateItemSelect(data) {
+                const itemSelect = document.getElementById("itemSelect");
+                itemSelect.innerHTML = "";
+                Object.keys(data).forEach((item) => {
+                    if (data[item].status === "進行中") {
+                        itemSelect.innerHTML += `<option value="${item}">${item}</option>`;
+                    }
+                });
+            }
+            function sendBid() {
+                const user = document.getElementById("playerName").value;
+                const item = document.getElementById("itemSelect").value;
+                const amount = parseInt(
+                    document.getElementById("bidAmount").value,
+                );
+                if (!user || !item || isNaN(amount) || amount <= 0) {
+                    alert("請輸入正確的出價資訊！");
+                    return;
+                }
+                ws.send(JSON.stringify({ type: "bid", user, item, amount }));
+            }
+            function addItem() {
+                const adminUser = document.getElementById("adminUser").value;
+                const adminPass = document.getElementById("adminPass").value;
+                const owner = document.getElementById("itemOwner").value;
+                const itemName = document.getElementById("newItemName").value;
+                const startingPrice = parseInt(
+                    document.getElementById("startingPrice").value,
+                );
+                if (
+                    !adminUser ||
+                    !adminPass ||
+                    !owner ||
+                    !itemName ||
+                    isNaN(startingPrice) ||
+                    startingPrice <= 0
+                ) {
+                    alert("請輸入完整的競標資訊！");
+                    return;
+                }
+                ws.send(
+                    JSON.stringify({
+                        type: "addItem",
+                        adminUser,
+                        adminPass,
+                        owner,
+                        itemName,
+                        startingPrice,
+                    }),
+                );
+            }
+        </script>
+    </body>
+</html>
