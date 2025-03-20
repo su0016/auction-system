@@ -168,6 +168,27 @@
                 }
                 ws.send(JSON.stringify({ type: "bid", user, item, amount }));
             }
+        function addItem() {
+    const adminUser = document.getElementById("adminUser").value;
+    const adminPass = document.getElementById("adminPass").value;
+    const itemOwner = document.getElementById("itemOwner").value;
+    const newItemName = document.getElementById("newItemName").value;
+    const startingPrice = parseInt(document.getElementById("startingPrice").value);
+
+    if (!adminUser || !adminPass || !itemOwner || !newItemName || isNaN(startingPrice) || startingPrice <= 0) {
+        alert("請輸入完整的競標資訊！");
+        return;
+    }
+
+    ws.send(JSON.stringify({
+        type: "addItem",
+        adminUser,
+        adminPass,
+        owner: itemOwner,
+        item: newItemName,
+        amount: startingPrice
+    }));
+    }    
             function startCountdown(item, timeLeft) {
                 const timerElement = document.getElementById(`timer-${item}`);
                 if (!timerElement) return;
