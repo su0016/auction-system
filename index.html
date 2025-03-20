@@ -118,7 +118,7 @@
         <script>
             const ws = new WebSocket(
                 (location.protocol === "https:" ? "wss://" : "ws://") +
-                    location.host,
+                    location.host + "/ws", // 假設 WebSocket 服務在 /ws 路徑
             );
             ws.onopen = () => console.log("✅ WebSocket 連線成功！");
             ws.onmessage = (event) => {
