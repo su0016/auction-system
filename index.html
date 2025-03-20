@@ -157,7 +157,6 @@
                         itemSelect.innerHTML += `<option value="${item}">${item}</option>`;
                     }
                 });
-                // 若沒有物品可選，顯示提示
                 if (itemSelect.innerHTML === "") {
                     itemSelect.innerHTML = "<option disabled selected>目前無可用物品</option>";
                 }
@@ -166,9 +165,7 @@
             function sendBid() {
                 const user = document.getElementById("playerName").value;
                 const item = document.getElementById("itemSelect").value;
-                const amount = parseInt(
-                    document.getElementById("bidAmount").value,
-                );
+                const amount = parseInt(document.getElementById("bidAmount").value);
                 if (!user || !item || isNaN(amount) || amount <= 0) {
                     alert("請輸入正確的出價資訊！");
                     return;
