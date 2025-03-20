@@ -101,6 +101,13 @@
                     <tbody id="auctionTable"></tbody>
                 </table>
             </div>
+            <div class="glass">
+                <h2>管理員刊登系統</h2>
+                <input type="text" id="adminItemName" placeholder="輸入物品名稱" />
+                <input type="number" id="startPrice" placeholder="起始價格" />
+                <input type="number" id="auctionDuration" placeholder="競標時間 (秒)" />
+                <button onclick="postAuctionItem()">刊登物品</button>
+            </div>
         </div>
         <script>
             const ws = new WebSocket(location.protocol === "https:" ? "wss://" : "ws://" + location.host + "/ws");
@@ -148,6 +155,17 @@
                     }, 1000);
                     timerElement.timerInterval = interval;
                 });
+            }
+
+            function postAuctionItem() {
+                const name = document.getElementById("adminItemName").value;
+                const price = document.getElementById("startPrice").value;
+                const duration = document.getElementById("auctionDuration").value;
+                if (!name || !price || !duration) {
+                    alert("請填寫完整資訊！");
+                    return;
+                }
+                ws.send(JSON.stringify({ type: "addItem", name, price, duration }));
             }
         </script>
     </body>
