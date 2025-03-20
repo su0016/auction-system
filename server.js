@@ -98,82 +98,41 @@ wss.on("connection", (ws) => {
                     adminUser === ADMIN_USERNAME &&
                     adminPass === ADMIN_PASSWORD
                 ) {
-                    // 檢查物品名稱和起始價格是否合法
-                    if (!itemName || !startingPrice || isNaN(startingPrice)) {
-                        ws.send(
-                            JSON.stringify({
-                                type: "error",
-                                message: "請提供有效的物品名稱和起始價格",
-                            })
-                        );
-                        return;
-                    }
+                    auctions[itemName] = {
+                        owner,
+                        amount: startingPrice,
+                        user: "None",
+                        status: "進行中",
+                        startingPrice,
+                        timeLeft: 3600,
+                        endTime: moment().add(24, "hours").toISOString(),
+                    };
 
-                    if (!auctions[itemName]) {
-                        auctions[itemName] = {
-                            owner: owner || "未知持有者",
-                            amount: startingPrice,
-                            startingPrice: startingPrice,
-                            user: "None",
-                            status: "進行中",
-                            endTime: moment().add(24, "hours").toISOString(),
-                        };
-                        console.log(
-                            `🆕 新增競標: ${itemName}, 持有人: ${auctions[itemName].owner}, 起始價格: ${startingPrice}`
-                        );
-                        saveAuctions();
-                        wss.clients.forEach((client) => {
-                            if (client.readyState === WebSocket.OPEN) {
-                                client.send(JSON.stringify(auctions));
-                            }
-                        });
-                    } else {
-                        console.log(`⚠️ 競標項目已存在: ${itemName}`);
-                        ws.send(
-                            JSON.stringify({
-                                type: "error",
-                                message: "競標項目已存在",
-                            })
-                        );
-                    }
+                    console.log(`✅ 新競標項目: ${itemName}`);
+                    saveAuctions();
+
+                    wss.clients.forEach((client) => {
+                        if (client.readyState === WebSocket.OPEN) {
+                            client.send(JSON.stringify(auctions));
+                        }
+                    });
                 } else {
-                    console.log("❌ 管理員驗證失敗");
+                    console.log(`❌ 管理員登入失敗`);
                     ws.send(
                         JSON.stringify({
                             type: "error",
-                            message: "帳號密碼輸入錯誤",
+                            message: "管理員帳號或密碼錯誤",
                         })
                     );
                 }
             }
+
         } catch (error) {
-            console.error("解析錯誤:", error);
+            console.error("處理訊息錯誤:", error);
         }
     });
 });
 
-// 競標結束判斷
-setInterval(() => {
-    const now = moment.utc();
-    Object.keys(auctions).forEach((item) => {
-        if (
-            now.isAfter(moment.utc(auctions[item].endTime)) &&
-            auctions[item].status === "進行中"
-        ) {
-            console.log(
-                `🏁 競標結束: ${item} - 得標者: ${auctions[item].user} (金額: ${auctions[item].amount})`
-            );
-            auctions[item].status = "已結束";
-            saveAuctions();
-            wss.clients.forEach((client) => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(JSON.stringify(auctions));
-                }
-            });
-        }
-    });
-}, 60000);
-
 server.listen(3000, () => {
-    console.log("🚀 伺服器運行於端口 3000");
+    console.log("🎧 伺服器正在運行，連接至 http://localhost:3000");
 });
