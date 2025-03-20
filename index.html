@@ -190,8 +190,8 @@
                     adminUser,
                     adminPass,
                     owner: itemOwner,
-                    item: newItemName,
-                    amount: startingPrice
+                    itemName: newItemName,
+                    startingPrice
                 }));
             }
 
@@ -199,7 +199,6 @@
                 const timerElement = document.getElementById(`timer-${item}`);
                 if (!timerElement) return;
 
-                // 清除舊的計時器
                 clearInterval(timerElement.timerInterval);
 
                 const interval = setInterval(() => {
@@ -211,7 +210,6 @@
                     }
                 }, 1000);
 
-                // 儲存當前計時器的 ID
                 timerElement.timerInterval = interval;
             }
         </script>
