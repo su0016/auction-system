@@ -12,7 +12,6 @@
             }
             body {
                 background: linear-gradient(to right, #141414, #1f1f1f);
-                background-size: cover;
                 color: white;
                 font-family: Arial, sans-serif;
                 text-align: center;
@@ -39,7 +38,6 @@
                 backdrop-filter: blur(10px);
                 padding: 20px;
                 border-radius: var(--border-radius);
-                border: 1px solid rgba(255, 255, 255, 0.3);
                 box-shadow: 0 0 10px var(--primary-color);
                 flex: 1;
                 margin: 10px;
@@ -59,9 +57,7 @@
                 background: var(--primary-color);
                 color: black;
             }
-            input,
-            select,
-            button {
+            input, select, button {
                 padding: 10px;
                 margin: 5px;
                 border-radius: var(--border-radius);
@@ -106,20 +102,8 @@
                 </table>
             </div>
         </div>
-        <div class="glass" style="margin-top: 20px; width: 60%">
-            <h2>管理員刊登競標</h2>
-            <input type="text" id="adminUser" placeholder="管理員帳號" />
-            <input type="password" id="adminPass" placeholder="管理員密碼" />
-            <input type="text" id="itemOwner" placeholder="道具持有人" />
-            <input type="text" id="newItemName" placeholder="競標物品名稱" />
-            <input type="number" id="startingPrice" placeholder="起始競標價格" />
-            <button onclick="addItem()">刊登競標</button>
-        </div>
         <script>
-            const ws = new WebSocket(
-                (location.protocol === "https:" ? "wss://" : "ws://") +
-                    location.host + "/ws", // 假設 WebSocket 服務在 /ws 路徑
-            );
+            const ws = new WebSocket(location.protocol === "https:" ? "wss://" : "ws://" + location.host + "/ws");
             ws.onopen = () => console.log("✅ WebSocket 連線成功！");
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
@@ -128,7 +112,6 @@
                     return;
                 }
                 updateAuctionTable(data);
-                updateItemSelect(data);
             };
 
             function updateAuctionTable(data) {
@@ -145,72 +128,26 @@
                         <td id="timer-${item}">${timeLeft}</td>
                     </tr>`;
                     tableBody.innerHTML += row;
-                    startCountdown(item, timeLeft);
                 });
+                startCountdowns(data);
             }
 
-            function updateItemSelect(data) {
-                const itemSelect = document.getElementById("itemSelect");
-                itemSelect.innerHTML = "";
+            function startCountdowns(data) {
                 Object.keys(data).forEach((item) => {
-                    if (data[item].status === "進行中") {
-                        itemSelect.innerHTML += `<option value="${item}">${item}</option>`;
-                    }
+                    const timerElement = document.getElementById(`timer-${item}`);
+                    if (!timerElement) return;
+                    clearInterval(timerElement.timerInterval);
+                    let timeLeft = parseInt(timerElement.textContent, 10);
+                    const interval = setInterval(() => {
+                        if (timeLeft > 0) {
+                            timeLeft--;
+                            timerElement.textContent = timeLeft;
+                        } else {
+                            clearInterval(interval);
+                        }
+                    }, 1000);
+                    timerElement.timerInterval = interval;
                 });
-                if (itemSelect.innerHTML === "") {
-                    itemSelect.innerHTML = "<option disabled selected>目前無可用物品</option>";
-                }
-            }
-
-            function sendBid() {
-                const user = document.getElementById("playerName").value;
-                const item = document.getElementById("itemSelect").value;
-                const amount = parseInt(document.getElementById("bidAmount").value);
-                if (!user || !item || isNaN(amount) || amount <= 0) {
-                    alert("請輸入正確的出價資訊！");
-                    return;
-                }
-                ws.send(JSON.stringify({ type: "bid", user, item, amount }));
-            }
-
-            function addItem() {
-                const adminUser = document.getElementById("adminUser").value;
-                const adminPass = document.getElementById("adminPass").value;
-                const itemOwner = document.getElementById("itemOwner").value;
-                const newItemName = document.getElementById("newItemName").value;
-                const startingPrice = parseInt(document.getElementById("startingPrice").value);
-
-                if (!adminUser || !adminPass || !itemOwner || !newItemName || isNaN(startingPrice) || startingPrice <= 0) {
-                    alert("請輸入完整的競標資訊！");
-                    return;
-                }
-
-                ws.send(JSON.stringify({
-                    type: "addItem",
-                    adminUser,
-                    adminPass,
-                    owner: itemOwner,
-                    itemName: newItemName,
-                    startingPrice
-                }));
-            }
-
-            function startCountdown(item, timeLeft) {
-                const timerElement = document.getElementById(`timer-${item}`);
-                if (!timerElement) return;
-
-                clearInterval(timerElement.timerInterval);
-
-                const interval = setInterval(() => {
-                    if (timeLeft > 0) {
-                        timeLeft--;
-                        timerElement.textContent = timeLeft;
-                    } else {
-                        clearInterval(interval);
-                    }
-                }, 1000);
-
-                timerElement.timerInterval = interval;
             }
         </script>
     </body>
