@@ -86,11 +86,7 @@
                 <h2>玩家競標</h2>
                 <input type="text" id="playerName" placeholder="輸入你的名稱" />
                 <select id="itemSelect"></select>
-                <input
-                    type="number"
-                    id="bidAmount"
-                    placeholder="輸入競標金額"
-                />
+                <input type="number" id="bidAmount" placeholder="輸入競標金額" />
                 <button onclick="sendBid()">出價</button>
             </div>
             <div class="glass">
@@ -103,6 +99,7 @@
                             <th>最高出價</th>
                             <th>最高出價者</th>
                             <th>狀態</th>
+                            <th>倒數計時</th>
                         </tr>
                     </thead>
                     <tbody id="auctionTable"></tbody>
@@ -115,11 +112,7 @@
             <input type="password" id="adminPass" placeholder="管理員密碼" />
             <input type="text" id="itemOwner" placeholder="道具持有人" />
             <input type="text" id="newItemName" placeholder="競標物品名稱" />
-            <input
-                type="number"
-                id="startingPrice"
-                placeholder="起始競標價格"
-            />
+            <input type="number" id="startingPrice" placeholder="起始競標價格" />
             <button onclick="addItem()">刊登競標</button>
         </div>
         <script>
@@ -141,14 +134,17 @@
                 const tableBody = document.getElementById("auctionTable");
                 tableBody.innerHTML = "";
                 Object.keys(data).forEach((item) => {
+                    let timeLeft = data[item].timeLeft || 0;
                     let row = `<tr>
                         <td>${data[item].owner}</td>
                         <td>${item}</td>
                         <td>${data[item].amount}</td>
                         <td>${data[item].user}</td>
                         <td>${data[item].status}</td>
+                        <td id="timer-${item}">${timeLeft}</td>
                     </tr>`;
                     tableBody.innerHTML += row;
+                    startCountdown(item, timeLeft);
                 });
             }
             function updateItemSelect(data) {
@@ -172,35 +168,17 @@
                 }
                 ws.send(JSON.stringify({ type: "bid", user, item, amount }));
             }
-            function addItem() {
-                const adminUser = document.getElementById("adminUser").value;
-                const adminPass = document.getElementById("adminPass").value;
-                const owner = document.getElementById("itemOwner").value;
-                const itemName = document.getElementById("newItemName").value;
-                const startingPrice = parseInt(
-                    document.getElementById("startingPrice").value,
-                );
-                if (
-                    !adminUser ||
-                    !adminPass ||
-                    !owner ||
-                    !itemName ||
-                    isNaN(startingPrice) ||
-                    startingPrice <= 0
-                ) {
-                    alert("請輸入完整的競標資訊！");
-                    return;
-                }
-                ws.send(
-                    JSON.stringify({
-                        type: "addItem",
-                        adminUser,
-                        adminPass,
-                        owner,
-                        itemName,
-                        startingPrice,
-                    }),
-                );
+            function startCountdown(item, timeLeft) {
+                const timerElement = document.getElementById(`timer-${item}`);
+                if (!timerElement) return;
+                const interval = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        timerElement.textContent = timeLeft;
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 1000);
             }
         </script>
     </body>
